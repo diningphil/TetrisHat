@@ -31,9 +31,9 @@ class Piece:
                (game_matrix[self.row + 2] [self.col + 1] == 1))
 
     def canMoveLeft(self):
-        return self.row > 1
+        return self.col > 0
     def canMoveRight(self):
-        return self.row < 6
+        return self.col < 6
     def rotate(self):
         pass # a square remains the same
     def paint(self, game_matrix, led_matrix): # Square block
@@ -82,7 +82,6 @@ class Matrix:
                     self.piece.paint(self.game_matrix, self.led_matrix)
                     self.invalidate()
        		else:
-                    print "New Piece"
                     self.piece = Piece()
                     self.piece.paint(self.game_matrix, self.led_matrix)
                     self.invalidate()
@@ -99,7 +98,11 @@ class Matrix:
                     self.piece.col = self.piece.col + 1
                     self.piece.paint(self.game_matrix, self.led_matrix)
                     self.invalidate()
-        
+            elif(event.direction == "down"):
+                if(not (self.piece.hasLanded(self.game_matrix, self.led_matrix))):
+                    self.piece.row = self.piece.row + 1
+                    self.piece.paint(self.game_matrix, self.led_matrix)
+                    self.invalidate()      
 def tick_action (matrix): # To be repeated every 1 sec
     delay = 1
     while True:
