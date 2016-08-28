@@ -1,5 +1,5 @@
 # TetrisHat
-Tetris with Raspberry Sense Hat
+Tetris with Raspberry Sense Hat LED matrix
 
 ## TODO
 
