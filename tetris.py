@@ -8,11 +8,6 @@ import sys
 sense = SenseHat()
 #sense.set_rotation(180)
 
-def sig_handler(signal, frame):
-    sense.clear()
-    sys.exit(0)
-
-signal.signal(signal.SIGINT, sig_handler)
 
 X = [255, 0, 0]  # Red
 O = [180, 180, 180]  # White
@@ -33,36 +28,6 @@ class Piece:
         self.oldcol = 2
         self.hasSpace = True
 
-    def hasLanded(self, game_matrix, led_matrix):
-        for point in self.structure:
-            if(self.row + point[0] == 7):
-                 return True
-            cellBelowIndex = (self.row + point[0] + 1, self.col + point[1])
-            if(game_matrix[cellBelowIndex[0]][cellBelowIndex[1]] == 1):
-                if not (point[0] + 1, point[1]) in self.structure: # that's not my point
-                    return True
-        return False
-
-    def canMoveLeft(self, game_matrix):
-        for point in self.structure:
-            if(self.col + point[1] == 0):
-                 return False
-            cellLeftIndex = (self.row + point[0], self.col + point[1] - 1)
-            if(game_matrix[cellLeftIndex[0]][cellLeftIndex[1]] == 1):
-                if not (point[0], point[1] - 1) in self.structure:
-                    return False
-        return True
-
-    def canMoveRight(self, game_matrix):
-        for point in self.structure:
-            if(self.col + point[1] == 7):
-                 return False
-            cellRightIndex = (self.row + point[0], self.col + point[1] + 1)
-            if(game_matrix[cellRightIndex[0]][cellRightIndex[1]] == 1):
-                if not (point[0], point[1] + 1) in self.structure:
-                    return False
-        return True
-
     def rotate(self):
         pass # a square remains the same
 
@@ -77,9 +42,9 @@ class Piece:
             game_matrix[cellIndex[0]][cellIndex[1]] = 1
             led_matrix[((cellIndex[0]) * 8) + cellIndex[1]] = O;
         
-	# Update old row and col positions	
-	self.oldrow = self.row
-	self.oldcol = self.col
+    	# Update old row and col positions	
+	    self.oldrow = self.row
+	    self.oldcol = self.col
 
 class Matrix:
     
@@ -105,10 +70,40 @@ class Matrix:
                     break
             if delete:
                 self.deleteRow(i)
-        
+    
+    def hasLanded(self):
+        for point in self.piece.structure:
+            if(self.piece.row + point[0] == 7):
+                 return True
+            cellBelowIndex = (self.piece.row + point[0] + 1, self.piece.col + point[1])
+            if(self.game_matrix[cellBelowIndex[0]][cellBelowIndex[1]] == 1):
+                if not (point[0] + 1, point[1]) in self.piece.structure: # that's not my point
+                    return True
+        return False
+
+    def canMoveLeft(self):
+        for point in self.piece.structure:
+            if(self.piece.col + point[1] == 0):
+                 return False
+            cellLeftIndex = (self.piece.row + point[0], self.piece.col + point[1] - 1)
+            if(self.game_matrix[cellLeftIndex[0]][cellLeftIndex[1]] == 1):
+                if not (point[0], point[1] - 1) in self.piece.structure:
+                    return False
+        return True
+
+    def canMoveRight(self):
+        for point in self.piece.structure:
+            if(self.piece.col + point[1] == 7):
+                 return False
+            cellRightIndex = (self.piece.row + point[0], self.piece.col + point[1] + 1)
+            if(self.game_matrix[cellRightIndex[0]][cellRightIndex[1]] == 1):
+                if not (point[0], point[1] + 1) in self.piece.structure:
+                    return False
+        return True
+
     def tick(self):
         if self.piece is not None:
-        	if(not (self.piece.hasLanded(self.game_matrix, self.led_matrix))):
+        	if(not (self.piece.hasLanded())):
  	            self.piece.row = self.piece.row + 1
                     self.piece.paint(self.game_matrix, self.led_matrix)
                     self.invalidate()
@@ -124,17 +119,17 @@ class Matrix:
     def movePiece(self, event):
         if(event.action == "pressed"):
             if(event.direction == "left"):
-	        if(self.piece.canMoveLeft(self.game_matrix)):
+	        if(self.piece.canMoveLeft()):
 		    self.piece.col = self.piece.col - 1
                     self.piece.paint(self.game_matrix, self.led_matrix)
                     self.invalidate()
             elif(event.direction == "right"):
-                if(self.piece.canMoveRight(self.game_matrix)):
+                if(self.piece.canMoveRight()):
                     self.piece.col = self.piece.col + 1
                     self.piece.paint(self.game_matrix, self.led_matrix)
                     self.invalidate()
             elif(event.direction == "down"):
-                if(not (self.piece.hasLanded(self.game_matrix, self.led_matrix))):
+                if(not (self.piece.hasLanded())):
                     self.piece.row = self.piece.row + 1
                     self.piece.paint(self.game_matrix, self.led_matrix)
                     self.invalidate()      
@@ -147,7 +142,8 @@ def tick_action (matrix): # To be repeated every 1 sec
         if not matrix.tick():
             sense.show_message("Looser", scroll_speed=0.03)
             quit = True
-    	
+    print "Tick thread exiting.."
+
 def stick_action(matrix):
     global sense
     global quit
@@ -155,10 +151,11 @@ def stick_action(matrix):
         event = sense.stick.wait_for_event()
  #      print("The joystick was {} {}".format(event.action, event.direction))
         matrix.movePiece(event)
+    print "Stick thread exiting.."
         
 def start_game ():
     matrix = Matrix()
-    #sense.show_message("Diningphil Tetris", scroll_speed=0.03)
+    
     thread1 = threading.Thread(target=tick_action, args=(matrix,))
     thread2 = threading.Thread(target=stick_action, args=(matrix,))    
 
