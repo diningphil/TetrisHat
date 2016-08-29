@@ -1,6 +1,5 @@
 from sense_hat import SenseHat
-import thread
-import threading
+from threading import Thread
 import time
 import signal
 import sys
@@ -52,6 +51,7 @@ class Matrix:
         self.game_matrix = [[0 for x in range(w)] for y in range(h)] # Init game matrix state
         self.led_matrix = [B for x in range(h*w)] # Init led matrix state (array of 64 entries)
 	self.piece = Piece(self.game_matrix)
+
     def invalidate(self):
         sense.set_pixels(self.led_matrix);
 
@@ -103,7 +103,7 @@ class Matrix:
 
     def tick(self):
         if self.piece is not None:
-        	if(not (self.piece.hasLanded())):
+        	if(not (self.hasLanded())):
  	            self.piece.row = self.piece.row + 1
                     self.piece.paint(self.game_matrix, self.led_matrix)
                     self.invalidate()
@@ -119,17 +119,17 @@ class Matrix:
     def movePiece(self, event):
         if(event.action == "pressed"):
             if(event.direction == "left"):
-	        if(self.piece.canMoveLeft()):
+	        if(self.canMoveLeft()):
 		    self.piece.col = self.piece.col - 1
                     self.piece.paint(self.game_matrix, self.led_matrix)
                     self.invalidate()
             elif(event.direction == "right"):
-                if(self.piece.canMoveRight()):
+                if(self.canMoveRight()):
                     self.piece.col = self.piece.col + 1
                     self.piece.paint(self.game_matrix, self.led_matrix)
                     self.invalidate()
             elif(event.direction == "down"):
-                if(not (self.piece.hasLanded())):
+                if(not (self.hasLanded())):
                     self.piece.row = self.piece.row + 1
                     self.piece.paint(self.game_matrix, self.led_matrix)
                     self.invalidate()      
@@ -137,34 +137,51 @@ class Matrix:
 def tick_action (matrix): # To be repeated every 1 sec
     delay = 1
     global quit
+    print "Started tick thread"
     while not quit:
     	time.sleep(delay);
-        if not matrix.tick():
-            sense.show_message("Looser", scroll_speed=0.03)
-            quit = True
-    print "Tick thread exiting.."
-
+	try:
+	    if not quit:
+		if not matrix.tick():
+                	sense.show_message("Looser", scroll_speed=0.03)
+                	quit = True
+	except Exception as err:
+	    print err
+	    quit = True
+    
 def stick_action(matrix):
     global sense
     global quit
+    print "Started stick event listener"
     while not quit:
-        event = sense.stick.wait_for_event()
- #      print("The joystick was {} {}".format(event.action, event.direction))
-        matrix.movePiece(event)
-    print "Stick thread exiting.."
-        
-def start_game ():
-    matrix = Matrix()
-    
-    thread1 = threading.Thread(target=tick_action, args=(matrix,))
-    thread2 = threading.Thread(target=stick_action, args=(matrix,))    
+	try:
+            event = sense.stick.wait_for_event()
+#           print("The joystick was {} {}".format(event.action, event.direction))	
+	    matrix.movePiece(event)
+	except Exception as err:
+            print err
+            quit = True
+      
+def sig_handler(signal, frame):
+	global quit
+	print "SIGINT captured"
+	sense.clear()
+	quit = True # Problem: stick can be waiting for event, need send an event
+	sys.exit(0)    
 
-    thread1.start()
+signal.signal(signal.SIGINT, sig_handler)
+
+def start_game ():
+
+    matrix = Matrix()
+
+    thread = Thread(target = tick_action, args = (matrix, ))
+    thread2 = Thread(target = stick_action, args = (matrix, ))
+    thread.start()
     thread2.start()
 
-    thread1.join()
-    print "Joined First Thread"
-    thread2.join()
-    print "Joined Second Thread, exiting..."
+    while not quit:
+	time.sleep(1)
+
 
 start_game();
