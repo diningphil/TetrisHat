@@ -1,5 +1,6 @@
 from sense_hat import SenseHat
 import thread
+import threading
 import time
 import signal
 import sys
@@ -17,47 +18,48 @@ X = [255, 0, 0]  # Red
 O = [180, 180, 180]  # White
 B = [0,0,0] # Black
 w, h = 8, 8
+quit = False
 
 class Piece:
 
     def __init__(self, game_matrix):
 	self.hasSpace = False
-
-    self.structure = [(0,0), (0,1), (1,0), (1,1)] # set of points of the piece, relative to row and col positions
+        self.structure = [(0,0), (0,1), (1,0), (1,1)] # set of points of the piece, relative to row and col positions
 	
-    # TODO: Check if I can put the piece in the matrix
-    self.row = 0
-    self.oldrow = 0
-    self.col = 2
-    self.oldcol = 2
+        # TODO: Check if I can put the piece in the matrix
+        self.row = 0
+        self.oldrow = 0
+        self.col = 2
+        self.oldcol = 2
+        self.hasSpace = True
 
     def hasLanded(self, game_matrix, led_matrix):
         for point in self.structure:
-            cellBelowIndex = (self.row + point[0] + 1, [self.col + point[1])
-            if(cellBelowIndex[0] == 6):
+            if(self.row + point[0] == 7):
                  return True
+            cellBelowIndex = (self.row + point[0] + 1, self.col + point[1])
             if(game_matrix[cellBelowIndex[0]][cellBelowIndex[1]] == 1):
-                if not (cellBelowIndex[0], cellBelowIndex[1]) in self.structure:
+                if not (point[0] + 1, point[1]) in self.structure: # that's not my point
                     return True
         return False
 
-    def canMoveLeft(self):
+    def canMoveLeft(self, game_matrix):
         for point in self.structure:
-            cellLeftIndex = (self.row + point[0], [self.col + point[1] - 1)
-            if(cellLeftIndex[1] <= 0):
+            if(self.col + point[1] == 0):
                  return False
-            if(game_matrix[cellBelowIndex[0]][cellBelowIndex[1]] == 1):
-                if not (cellBelowIndex[0], cellBelowIndex[1]) in self.structure:
+            cellLeftIndex = (self.row + point[0], self.col + point[1] - 1)
+            if(game_matrix[cellLeftIndex[0]][cellLeftIndex[1]] == 1):
+                if not (point[0], point[1] - 1) in self.structure:
                     return False
         return True
 
-    def canMoveRight(self):
+    def canMoveRight(self, game_matrix):
         for point in self.structure:
-            cellRightIndex = (self.row + point[0], [self.col + point[1] + 1)
-            if(cellLeftIndex[1] >= 7):
+            if(self.col + point[1] == 7):
                  return False
-            if(game_matrix[cellBelowIndex[0]][cellBelowIndex[1]] == 1):
-                if not (cellBelowIndex[0], cellBelowIndex[1]) in self.structure:
+            cellRightIndex = (self.row + point[0], self.col + point[1] + 1)
+            if(game_matrix[cellRightIndex[0]][cellRightIndex[1]] == 1):
+                if not (point[0], point[1] + 1) in self.structure:
                     return False
         return True
 
@@ -66,18 +68,18 @@ class Piece:
 
     def paint(self, game_matrix, led_matrix): # Square block
         for point in self.structure: # Remove old from matrices
-            oldCellIndex = (self.oldrow + point[0], [self.oldcol + point[1])
+            oldCellIndex = (self.oldrow + point[0], self.oldcol + point[1])
             game_matrix[oldCellIndex[0]][oldCellIndex[1]] = 0
             led_matrix[((oldCellIndex[0]) * 8) + oldCellIndex[1]] = B;
         
         for point in self.structure: # Add new to matrices
-            cellIndex = (self.row + point[0], [self.col + point[1])
+            cellIndex = (self.row + point[0], self.col + point[1])
             game_matrix[cellIndex[0]][cellIndex[1]] = 1
             led_matrix[((cellIndex[0]) * 8) + cellIndex[1]] = O;
         
-	    # Update old row and col positions	
-	    self.oldrow = self.row
-	    self.oldcol = self.col
+	# Update old row and col positions	
+	self.oldrow = self.row
+	self.oldcol = self.col
 
 class Matrix:
     
@@ -114,20 +116,20 @@ class Matrix:
                     self.clearRows()
                     self.piece = Piece(self.game_matrix)
 		    if not self.piece.hasSpace:
-			sense.show_message("Looooser", scroll_speed=0.04)
-			sys.exit(0)
+			return False
                     self.piece.paint(self.game_matrix, self.led_matrix)
                     self.invalidate()
+	return True
 
     def movePiece(self, event):
         if(event.action == "pressed"):
             if(event.direction == "left"):
-                if(self.piece.canMoveLeft()):
-                    self.piece.col = self.piece.col - 1
+	        if(self.piece.canMoveLeft(self.game_matrix)):
+		    self.piece.col = self.piece.col - 1
                     self.piece.paint(self.game_matrix, self.led_matrix)
                     self.invalidate()
             elif(event.direction == "right"):
-                if(self.piece.canMoveRight()):
+                if(self.piece.canMoveRight(self.game_matrix)):
                     self.piece.col = self.piece.col + 1
                     self.piece.paint(self.game_matrix, self.led_matrix)
                     self.invalidate()
@@ -136,40 +138,36 @@ class Matrix:
                     self.piece.row = self.piece.row + 1
                     self.piece.paint(self.game_matrix, self.led_matrix)
                     self.invalidate()      
+
 def tick_action (matrix): # To be repeated every 1 sec
     delay = 1
-    while True:
+    global quit
+    while not quit:
     	time.sleep(delay);
-        matrix.tick()        
+        if not matrix.tick():
+            sense.show_message("Looser", scroll_speed=0.03)
+            quit = True
     	
 def stick_action(matrix):
     global sense
-    
-    while True:
+    global quit
+    while not quit:
         event = sense.stick.wait_for_event()
- #       print("The joystick was {} {}".format(event.action, event.direction))
+ #      print("The joystick was {} {}".format(event.action, event.direction))
         matrix.movePiece(event)
         
-def start_stick(matrix):
-    try:
-        thread.start_new_thread( stick_action, (matrix,) )
-    except Exception as err:
-        print "Error: unable to start thread"
-	print err
-
-def start_timer(matrix):
-    try:
-        thread.start_new_thread( tick_action, (matrix,) )
-    except Exception as err:
-        print "Error: unable to start thread"
-	print err
-
 def start_game ():
     matrix = Matrix()
     #sense.show_message("Diningphil Tetris", scroll_speed=0.03)
-    start_timer(matrix)
-    start_stick(matrix)
-    while True:
-	pass
-	
+    thread1 = threading.Thread(target=tick_action, args=(matrix,))
+    thread2 = threading.Thread(target=stick_action, args=(matrix,))    
+
+    thread1.start()
+    thread2.start()
+
+    thread1.join()
+    print "Joined First Thread"
+    thread2.join()
+    print "Joined Second Thread, exiting..."
+
 start_game();
