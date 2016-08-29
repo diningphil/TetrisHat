@@ -22,55 +22,62 @@ class Piece:
 
     def __init__(self, game_matrix):
 	self.hasSpace = False
-	for i in range(0,w-1):
-		if(game_matrix[0][i] == 0 and game_matrix[0][i+1] == 0
-		   and game_matrix[1][i] == 0 and game_matrix[1][i+1] == 0):
-			self.hasSpace = True
-			self.row = 0; # Positions can go from 0 to 7
-       			self.col = i; # Positions can go from 0 to 7
-        		self.oldrow = 0;
-        		self.oldcol = i;
+
+    self.structure = [(0,0), (0,1), (1,0), (1,1)] # set of points of the piece, relative to row and col positions
+	
+    # TODO: Check if I can put the piece in the matrix
+    self.row = 0
+    self.oldrow = 0
+    self.col = 2
+    self.oldcol = 2
+
     def hasLanded(self, game_matrix, led_matrix):
-        return ((self.row == 6) or
-               (game_matrix[self.row + 2] [self.col] == 1) or
-               (game_matrix[self.row + 2] [self.col + 1] == 1))
+        for point in self.structure:
+            cellBelowIndex = (self.row + point[0] + 1, [self.col + point[1])
+            if(cellBelowIndex[0] == 6):
+                 return True
+            if(game_matrix[cellBelowIndex[0]][cellBelowIndex[1]] == 1):
+                if not (cellBelowIndex[0], cellBelowIndex[1]) in self.structure:
+                    return True
+        return False
 
     def canMoveLeft(self):
-        return self.col > 0
+        for point in self.structure:
+            cellLeftIndex = (self.row + point[0], [self.col + point[1] - 1)
+            if(cellLeftIndex[1] <= 0):
+                 return False
+            if(game_matrix[cellBelowIndex[0]][cellBelowIndex[1]] == 1):
+                if not (cellBelowIndex[0], cellBelowIndex[1]) in self.structure:
+                    return False
+        return True
 
     def canMoveRight(self):
-        return self.col < 6
+        for point in self.structure:
+            cellRightIndex = (self.row + point[0], [self.col + point[1] + 1)
+            if(cellLeftIndex[1] >= 7):
+                 return False
+            if(game_matrix[cellBelowIndex[0]][cellBelowIndex[1]] == 1):
+                if not (cellBelowIndex[0], cellBelowIndex[1]) in self.structure:
+                    return False
+        return True
 
     def rotate(self):
         pass # a square remains the same
 
     def paint(self, game_matrix, led_matrix): # Square block
-	
-        # Hard coded: remove matrix
-        game_matrix[self.oldrow][self.oldcol] = 0;
-        game_matrix[self.oldrow] [self.oldcol + 1] = 0;
-        game_matrix[self.oldrow + 1] [self.oldcol] = 0;
-        game_matrix[self.oldrow + 1] [self.oldcol + 1] = 0;
+        for point in self.structure: # Remove old from matrices
+            oldCellIndex = (self.oldrow + point[0], [self.oldcol + point[1])
+            game_matrix[oldCellIndex[0]][oldCellIndex[1]] = 0
+            led_matrix[((oldCellIndex[0]) * 8) + oldCellIndex[1]] = B;
         
-        led_matrix[((self.oldrow) * 8) + self.oldcol] = B;
-        led_matrix[((self.oldrow) * 8) + self.oldcol + 1] = B;
-        led_matrix[((self.oldrow + 1) * 8) + self.oldcol] = B;
-        led_matrix[((self.oldrow + 1) * 8) + self.oldcol + 1] = B;
-
-        # Hard coded: add matrix
-        game_matrix[self.row] [self.col] = 1;
-        game_matrix[self.row] [self.col + 1] = 1;
-        game_matrix[self.row + 1] [self.col] = 1;
-        game_matrix[self.row + 1] [self.col + 1] = 1;
+        for point in self.structure: # Add new to matrices
+            cellIndex = (self.row + point[0], [self.col + point[1])
+            game_matrix[cellIndex[0]][cellIndex[1]] = 1
+            led_matrix[((cellIndex[0]) * 8) + cellIndex[1]] = O;
         
-        led_matrix[((self.row) * 8) + self.col] = O;
-        led_matrix[((self.row) * 8) + self.col + 1] = O;
-        led_matrix[((self.row + 1) * 8) + self.col] = O;
-        led_matrix[((self.row + 1) * 8) + self.col + 1] = O;
-	
-	# Update old row and col positions	
-	self.oldrow = self.row
-	self.oldcol = self.col
+	    # Update old row and col positions	
+	    self.oldrow = self.row
+	    self.oldcol = self.col
 
 class Matrix:
     
