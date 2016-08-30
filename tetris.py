@@ -4,6 +4,7 @@ import time
 import signal
 import sys
 from pythonsensehat.sense_hat.sense_hat import SenseHat
+import shapes
 
 sense = SenseHat()
 #sense.set_rotation(180)
@@ -15,46 +16,30 @@ B = [0,0,0] # Black
 w, h = 8, 8
 quit = False
 
-class Piece:
-
-    def __init__(self, game_matrix):
-	self.hasSpace = False
-        self.structure = [(0,0), (0,1), (1,0), (1,1)] # set of points of the piece, relative to row and col positions
-	
-        # TODO: Check if I can put the piece in the matrix
-        self.row = 0
-        self.oldrow = 0
-        self.col = 2
-        self.oldcol = 2
-        self.hasSpace = True
-
-    def rotate(self):
-        pass # a square remains the same
-
-    def paint(self, game_matrix, led_matrix): # Square block
-        for point in self.structure: # Remove old from matrices
-            oldCellIndex = (self.oldrow + point[0], self.oldcol + point[1])
-            game_matrix[oldCellIndex[0]][oldCellIndex[1]] = 0
-            led_matrix[((oldCellIndex[0]) * 8) + oldCellIndex[1]] = B;
-        
-        for point in self.structure: # Add new to matrices
-            cellIndex = (self.row + point[0], self.col + point[1])
-            game_matrix[cellIndex[0]][cellIndex[1]] = 1
-            led_matrix[((cellIndex[0]) * 8) + cellIndex[1]] = O;
-        
-    	# Update old row and col positions	
-	    self.oldrow = self.row
-	    self.oldcol = self.col
-
 class Matrix:
-    
+
     def __init__(self):
         self.game_matrix = [[0 for x in range(w)] for y in range(h)] # Init game matrix state
         self.led_matrix = [B for x in range(h*w)] # Init led matrix state (array of 64 entries)
-	self.piece = Piece(self.game_matrix)
-
+	self.piece = shapes.pickRandomPiece()    
+        
     def invalidate(self):
         sense.set_pixels(self.led_matrix);
+
+    def paintPiece(self): # Square block
+        for point in self.piece.structure: # Remove old from matrices
+            oldCellIndex = (self.piece.oldrow + point[0], self.piece.oldcol + point[1])
+            self.game_matrix[oldCellIndex[0]][oldCellIndex[1]] = 0
+            self.led_matrix[((oldCellIndex[0]) * 8) + oldCellIndex[1]] = B;
+        
+        for point in self.piece.structure: # Add new to matrices
+            cellIndex = (self.piece.row + point[0], self.piece.col + point[1])
+            self.game_matrix[cellIndex[0]][cellIndex[1]] = 1
+            self.led_matrix[((cellIndex[0]) * 8) + cellIndex[1]] = O;
+        
+    	# Update old row and col positions	
+	    self.piece.oldrow = self.piece.row
+	    self.piece.oldcol = self.piece.col
 
     def deleteRow(self, i):
         for j in range(i, 0, -1): # i i-1 ... 1
@@ -102,18 +87,22 @@ class Matrix:
                     return False
         return True
 
+    def findSpaceForPiece(self):
+        return True
+
+    
     def tick(self):
         if self.piece is not None:
         	if(not (self.hasLanded())):
  	            self.piece.row = self.piece.row + 1
-                    self.piece.paint(self.game_matrix, self.led_matrix)
+                    self.paintPiece()
                     self.invalidate()
        		else:
                     self.clearRows()
-                    self.piece = Piece(self.game_matrix)
-		    if not self.piece.hasSpace:
+                    self.piece = shapes.pickRandomPiece() 
+		    if not self.findSpaceForPiece():
 			return False
-                    self.piece.paint(self.game_matrix, self.led_matrix)
+                    self.paintPiece()
                     self.invalidate()
 	return True
 
@@ -122,17 +111,17 @@ class Matrix:
             if(event.direction == "left"):
 	        if(self.canMoveLeft()):
 		    self.piece.col = self.piece.col - 1
-                    self.piece.paint(self.game_matrix, self.led_matrix)
+                    self.paintPiece()
                     self.invalidate()
             elif(event.direction == "right"):
                 if(self.canMoveRight()):
                     self.piece.col = self.piece.col + 1
-                    self.piece.paint(self.game_matrix, self.led_matrix)
+                    self.paintPiece()
                     self.invalidate()
             elif(event.direction == "down"):
                 if(not (self.hasLanded())):
                     self.piece.row = self.piece.row + 1
-                    self.piece.paint(self.game_matrix, self.led_matrix)
+                    self.paintPiece()
                     self.invalidate()      
 
 def tick_action (matrix): # To be repeated every 1 sec
