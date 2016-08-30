@@ -1,8 +1,9 @@
-from sense_hat import SenseHat
+# from sense import SenseHat
 from threading import Thread
 import time
 import signal
 import sys
+from pythonsensehat.sense_hat.sense_hat import SenseHat
 
 sense = SenseHat()
 #sense.set_rotation(180)
@@ -155,9 +156,10 @@ def stick_action(matrix):
     print "Started stick event listener"
     while not quit:
 	try:
-            event = sense.stick.wait_for_event()
+            event = sense.stick.wait_for_event(timeout=1)
 #           print("The joystick was {} {}".format(event.action, event.direction))	
-	    matrix.movePiece(event)
+	    if event is not None:
+	    	matrix.movePiece(event)
 	except Exception as err:
             print err
             quit = True
