@@ -8,4 +8,5 @@ Tetris with Raspberry Sense Hat LED matrix
 ## TODO
 1. State when the game is over 
 2. Add rotation feature
+3. Add final score 
 
