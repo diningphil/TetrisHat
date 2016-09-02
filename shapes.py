@@ -14,7 +14,7 @@ class Piece:
     def rotate(self):
         self.idxRot = (self.idxRot + 1) % 4
         if(self.idxRot == 0):
-            self.structure = self.standardRotation()
+            self.structure = self.standardPosition()
         elif(self.idxRot == 1):
             self.structure = self.rotateRight()
         elif(self.idxRot == 2):
@@ -22,12 +22,11 @@ class Piece:
         elif(self.idxRot == 3):
             self.structure = self.rotateLeft()
             
-        
+    def standardPosition(self):
+        raise Exception("Implement it")
     def rotateLeft(self):
         raise Exception("Implement it")
     def rotateRight(self):
-        raise Exception("Implement it")
-    def standardRotation(self):
         raise Exception("Implement it")
     def flip(self):
         raise Exception("Implement it")
@@ -37,13 +36,14 @@ class Square(Piece):
     
     def __init__(self):
         Piece.__init__(self)
-        self.structure = [(0,0), (0,1), (1,0), (1,1)]	
+        self.structure = [(0,0), (0,1), (1,1), (1,2)]
+        self.oldstructure = [(0,0), (0,1), (1,0), (1,1)]	
 
+    def standardPosition(self):
+        return [(0,0), (0,1), (1,0), (1,1)]	
     def rotateLeft(self):
         return [(0,0), (0,1), (1,0), (1,1)]	
     def rotateRight(self):
-        return [(0,0), (0,1), (1,0), (1,1)]	
-    def standardRotation(self):
         return [(0,0), (0,1), (1,0), (1,1)]	
     def flip(self):
         return [(0,0), (0,1), (1,0), (1,1)]	
@@ -53,13 +53,14 @@ class JPiece(Piece):
     def __init__(self):
         Piece.__init__(self)
         self.structure = [(0,0), (0,1), (1,1), (1,2)]
+        self.oldstructure = [(0,0), (0,1), (1,1), (1,2)]
 
+    def standardPosition(self):
+        return [(0,0), (0,1), (1,1), (1,2)]
     def rotateLeft(self):
         return [(0,1), (1,1), (1,0), (2,0)]	
     def rotateRight(self):
         return [(0,1), (1,1), (1,0), (2,0)]	
-    def standardRotation(self):
-        return [(0,0), (0,1), (1,1), (1,2)]
     def flip(self):
         return [(1,0), (1,1), (0,1), (0,2)]	
      
