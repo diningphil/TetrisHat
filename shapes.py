@@ -19,7 +19,7 @@ class Piece:
             self.structure = self.rotateRight()
         elif(self.idxRot == 2):
             self.structure = self.flip()
-        elif(self.idxRot == 2):
+        elif(self.idxRot == 3):
             self.structure = self.rotateLeft()
             
         
