@@ -14,6 +14,7 @@ X = [255, 0, 0]  # Red
 O = [180, 180, 180]  # White
 B = [0,0,0] # Black
 w, h = 8, 8
+score = 0
 quit = False
 
 class Matrix:
@@ -27,7 +28,7 @@ class Matrix:
         sense.set_pixels(self.led_matrix);
 
     def paintPiece(self): # Square block
-        for point in self.piece.structure: # Remove old from matrices
+        for point in self.piece.oldstructure: # Remove old from matrices
             oldCellIndex = (self.piece.oldrow + point[0], self.piece.oldcol + point[1])
             self.game_matrix[oldCellIndex[0]][oldCellIndex[1]] = 0
             self.led_matrix[((oldCellIndex[0]) * 8) + oldCellIndex[1]] = B;
@@ -40,6 +41,7 @@ class Matrix:
     	# Update old row and col positions	
 	    self.piece.oldrow = self.piece.row
 	    self.piece.oldcol = self.piece.col
+	    self.piece.oldstructure = self.piece.structure
 
     def deleteRow(self, i):
         for j in range(i, 0, -1): # i i-1 ... 1
@@ -48,6 +50,7 @@ class Matrix:
 		self.led_matrix[j*8 + k] = self.led_matrix[(j-1)*8 + k]
 
     def clearRows(self):
+        global score
         for i in range(1, h):
             delete = 1
             for j in range(0, w):
@@ -55,6 +58,7 @@ class Matrix:
                     delete = 0
                     break
             if delete:
+                score = score + 1
                 self.deleteRow(i)
     
     def hasLanded(self):
@@ -87,8 +91,21 @@ class Matrix:
                     return False
         return True
 
-    def findSpaceForPiece(self):
-        return True
+    def findSpaceForPiece(self, piece):
+        piece.row = 0
+        piece.oldrow = 0
+        for i in range(0, 7):
+             piece.col = i
+             piece.col = i
+             fits = True
+             for point in piece.structure:
+                 cellIndex = (piece.row + point[0], piece.col + point[1])
+                 if cellIndex[1] > 7 or (self.game_matrix[cellIndex[0]][cellIndex[1]] == 1):
+                     fits = False
+                     break
+             if fits:
+                 return True
+        return False
 
     
     def tick(self):
@@ -98,15 +115,19 @@ class Matrix:
                     self.paintPiece()
                     self.invalidate()
        		else:
+                    self.piece = None
                     self.clearRows()
-                    self.piece = shapes.pickRandomPiece() 
-		    if not self.findSpaceForPiece():
+                    p = shapes.pickRandomPiece() 
+		    if not self.findSpaceForPiece(p):
 			return False
+                    self.piece = p
                     self.paintPiece()
                     self.invalidate()
 	return True
 
     def movePiece(self, event):
+        if self.piece is None:
+            return
         if(event.action == "pressed"):
             if(event.direction == "left"):
 	        if(self.canMoveLeft()):
@@ -118,14 +139,23 @@ class Matrix:
                     self.piece.col = self.piece.col + 1
                     self.paintPiece()
                     self.invalidate()
-            elif(event.direction == "down"):
+            elif(event.direction == "down"): 
                 if(not (self.hasLanded())):
                     self.piece.row = self.piece.row + 1
                     self.paintPiece()
-                    self.invalidate()      
+                    self.invalidate()
+            elif(event.direction == "push"):
+                if(self.canRotate()):
+                    self.piece.rotate()
+                    self.paintPiece()
+                    self.invalidate()  
 
+    def canRotate(self):
+        return True
+    
 def tick_action (matrix): # To be repeated every 1 sec
     delay = 1
+    global score
     global quit
     print "Started tick thread"
     while not quit:
@@ -133,7 +163,7 @@ def tick_action (matrix): # To be repeated every 1 sec
 	try:
 	    if not quit:
 		if not matrix.tick():
-                	sense.show_message("Looser", scroll_speed=0.03)
+                	sense.show_message("Final score: " + str(score), scroll_speed=0.07)
                 	quit = True
 	except Exception as err:
 	    print err
