@@ -6,7 +6,6 @@ Tetris with Raspberry Sense Hat LED matrix
    I have opened a pull request, hopefully the owners will merge it into the master branch.
 
 ## TODO
-1. State when the game is over 
-2. Add rotation feature
-3. Add final score 
+1. Fix "push" recognition
+2. Check rotation boundaries on the right side of the game matrix
 
