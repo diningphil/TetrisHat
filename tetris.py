@@ -139,7 +139,7 @@ class Matrix:
                     self.piece.col = self.piece.col + 1
                     self.paintPiece()
                     self.invalidate()
-	    elif(event.direction == "push"):
+	    elif(event.direction == "up"):
                 if(self.canRotate()):
                     self.piece.rotate()
                     self.paintPiece()
@@ -151,7 +151,16 @@ class Matrix:
                     self.invalidate()
 
     def canRotate(self):
-        return True
+        row = self.piece.row
+        col = self.piece.col
+        struct = self.piece.getNextStructure()
+        fits = True
+        for point in struct:
+                 cellIndex = (row + point[0], col + point[1])
+                 if cellIndex[1] > 7 or or cellIndex[0] > 7 or (self.game_matrix[cellIndex[0]][cellIndex[1]] == 1):
+                     fits = False
+                     break                 
+        return Fits
     
 def tick_action (matrix): # To be repeated every 1 sec
     delay = 1

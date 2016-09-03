@@ -13,15 +13,18 @@ class Piece:
 
     def rotate(self):
         self.idxRot = (self.idxRot + 1) % 4
+        self.structure = self.getNextStructure()
+
+    def getNextStructure(self):
         if(self.idxRot == 0):
-            self.structure = self.standardPosition()
+            return self.standardPosition()
         elif(self.idxRot == 1):
-            self.structure = self.rotateRight()
+            return self.rotateRight()
         elif(self.idxRot == 2):
-            self.structure = self.flip()
+            return = self.flip()
         elif(self.idxRot == 3):
-            self.structure = self.rotateLeft()
-            
+            return self.rotateLeft()
+
     def standardPosition(self):
         raise Exception("Implement it")
     def rotateLeft(self):
