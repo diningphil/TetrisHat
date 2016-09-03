@@ -157,10 +157,11 @@ class Matrix:
         fits = True
         for point in struct:
                  cellIndex = (row + point[0], col + point[1])
-                 if cellIndex[1] > 7 or or cellIndex[0] > 7 or (self.game_matrix[cellIndex[0]][cellIndex[1]] == 1):
+                 if cellIndex[1] > 7 or cellIndex[0] > 7 or ( (self.game_matrix[cellIndex[0]][cellIndex[1]] == 1) and not (point[0], point[1] - 1) in self.piece.structure):
                      fits = False
+		     print "Cannot rotate"
                      break                 
-        return Fits
+        return fits
     
 def tick_action (matrix): # To be repeated every 1 sec
     delay = 1

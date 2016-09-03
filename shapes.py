@@ -16,13 +16,14 @@ class Piece:
         self.structure = self.getNextStructure()
 
     def getNextStructure(self):
-        if(self.idxRot == 0):
+	idx = (self.idxRot + 1) % 4
+        if(idx == 0):
             return self.standardPosition()
-        elif(self.idxRot == 1):
+        elif(idx == 1):
             return self.rotateRight()
-        elif(self.idxRot == 2):
-            return = self.flip()
-        elif(self.idxRot == 3):
+        elif(idx == 2):
+            return self.flip()
+        elif(idx == 3):
             return self.rotateLeft()
 
     def standardPosition(self):
@@ -91,7 +92,7 @@ def pickRandomPiece():
         elif(randomIndex == 1):
 	    print "Picked JPiece"
             return JPiece()
-        elif(randomIndex == 1):
+        elif(randomIndex == 2):
 	    print "Picked Stick"
             return Stick()
         return Square() 
