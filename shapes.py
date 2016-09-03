@@ -74,9 +74,9 @@ class Stick(Piece):
     def standardPosition(self):
         return [(0,0), (0,1), (0,2)]
     def rotateLeft(self):
-        return [(0,0), (1,0), (2,0)]	
+        return [(0,1), (1,1), (2,1)]	
     def rotateRight(self):
-        return [(0,0), (1,0), (2,0)]	
+        return [(0,1), (1,1), (2,1)]	
     def flip(self):
         return [(0,0), (0,1), (0,2)]	
      
