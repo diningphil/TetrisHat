@@ -6,5 +6,4 @@ Tetris with Raspberry Sense Hat LED matrix
    
 ## TODO
 1. Fix "push" recognition
-2. Check rotation boundaries on the right side of the game matrix
-
+2. Implement canRotate which checks rotation boundaries on the right side of the game matrix ( rotation is always clockwise )

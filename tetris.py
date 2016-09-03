@@ -139,16 +139,16 @@ class Matrix:
                     self.piece.col = self.piece.col + 1
                     self.paintPiece()
                     self.invalidate()
+	    elif(event.direction == "push"):
+                if(self.canRotate()):
+                    self.piece.rotate()
+                    self.paintPiece()
+                    self.invalidate()
             elif(event.direction == "down"): 
                 if(not (self.hasLanded())):
                     self.piece.row = self.piece.row + 1
                     self.paintPiece()
                     self.invalidate()
-            elif(event.direction == "push"):
-                if(self.canRotate()):
-                    self.piece.rotate()
-                    self.paintPiece()
-                    self.invalidate()  
 
     def canRotate(self):
         return True

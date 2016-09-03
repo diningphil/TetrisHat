@@ -36,7 +36,7 @@ class Square(Piece):
     
     def __init__(self):
         Piece.__init__(self)
-        self.structure = [(0,0), (0,1), (1,1), (1,2)]
+        self.structure = [(0,0), (0,1), (1,0), (1,1)]
         self.oldstructure = [(0,0), (0,1), (1,0), (1,1)]	
 
     def standardPosition(self):
@@ -64,10 +64,12 @@ class JPiece(Piece):
     def flip(self):
         return [(1,0), (1,1), (0,1), (0,2)]	
      
-    def pickRandomPiece():
+def pickRandomPiece():
         randomIndex = random.randint(0,1)
         if(randomIndex == 0):
+	    print "Picked Square"
             return Square()
         elif(randomIndex == 1):
+	    print "Picked JPiece"
             return JPiece()
-        return Piece() 
+        return Square() 
