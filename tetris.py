@@ -157,9 +157,13 @@ class Matrix:
         fits = True
         for point in struct:
                  cellIndex = (row + point[0], col + point[1])
-                 if cellIndex[1] > 7 or cellIndex[0] > 7 or ( (self.game_matrix[cellIndex[0]][cellIndex[1]] == 1) and not (point[0], point[1] - 1) in self.piece.structure):
+                 if cellIndex[1] > 7 or cellIndex[0] > 7 :
                      fits = False
-		     print "Cannot rotate"
+		             print "Cannot rotate1"
+                     break
+                 if ( (self.game_matrix[cellIndex[0]][cellIndex[1]] == 1) and not (point[0], point[1] - 1) in self.piece.structure ):
+                     fits = False
+		             print "Cannot rotate2"
                      break                 
         return fits
     
